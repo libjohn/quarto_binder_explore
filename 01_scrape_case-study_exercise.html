@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.4.532">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="John Little">
+<meta name="dcterms.date" content="2023-12-20">
+
+<title>rvest tutorial demonstration</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="01_scrape_case-study_exercise_files/libs/clipboard/clipboard.min.js"></script>
+<script src="01_scrape_case-study_exercise_files/libs/quarto-html/quarto.js"></script>
+<script src="01_scrape_case-study_exercise_files/libs/quarto-html/popper.min.js"></script>
+<script src="01_scrape_case-study_exercise_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="01_scrape_case-study_exercise_files/libs/quarto-html/anchor.min.js"></script>
+<link href="01_scrape_case-study_exercise_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="01_scrape_case-study_exercise_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="01_scrape_case-study_exercise_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="01_scrape_case-study_exercise_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="01_scrape_case-study_exercise_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body>
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#load-library-packages" id="toc-load-library-packages" class="nav-link active" data-scroll-target="#load-library-packages">Load library packages</a></li>
+  <li><a href="#example" id="toc-example" class="nav-link" data-scroll-target="#example">Example</a>
+  <ul class="collapse">
+  <li><a href="#import-data" id="toc-import-data" class="nav-link" data-scroll-target="#import-data">Import data</a></li>
+  <li><a href="#results-are-in-a-list." id="toc-results-are-in-a-list." class="nav-link" data-scroll-target="#results-are-in-a-list.">Results are in a list.</a></li>
+  <li><a href="#procedure" id="toc-procedure" class="nav-link" data-scroll-target="#procedure">Procedure</a></li>
+  <li><a href="#parse-the-nodes-of-the-html-tree." id="toc-parse-the-nodes-of-the-html-tree." class="nav-link" data-scroll-target="#parse-the-nodes-of-the-html-tree.">Parse the nodes of the HTML tree.</a></li>
+  <li><a href="#parse-the-html-attributes-of-an-html-tag" id="toc-parse-the-html-attributes-of-an-html-tag" class="nav-link" data-scroll-target="#parse-the-html-attributes-of-an-html-tag">Parse the HTML attributes of an HTML tag…</a></li>
+  </ul></li>
+  <li><a href="#systematize-targets" id="toc-systematize-targets" class="nav-link" data-scroll-target="#systematize-targets">Systematize targets</a>
+  <ul class="collapse">
+  <li><a href="#build-tibble" id="toc-build-tibble" class="nav-link" data-scroll-target="#build-tibble">Build Tibble</a></li>
+  <li><a href="#operationalize-the-workflow" id="toc-operationalize-the-workflow" class="nav-link" data-scroll-target="#operationalize-the-workflow">Operationalize the workflow</a></li>
+  </ul></li>
+  <li><a href="#navigation-and-crawling" id="toc-navigation-and-crawling" class="nav-link" data-scroll-target="#navigation-and-crawling">Navigation and crawling</a>
+  <ul class="collapse">
+  <li><a href="#deconstructing-a-single-target-page-and-site-design" id="toc-deconstructing-a-single-target-page-and-site-design" class="nav-link" data-scroll-target="#deconstructing-a-single-target-page-and-site-design">Deconstructing a single target page and site design</a></li>
+  <li><a href="#crawl-summary-results-pages" id="toc-crawl-summary-results-pages" class="nav-link" data-scroll-target="#crawl-summary-results-pages">Crawl summary results pages</a></li>
+  <li><a href="#mini-review-summary" id="toc-mini-review-summary" class="nav-link" data-scroll-target="#mini-review-summary">Mini review summary</a></li>
+  <li><a href="#develop-a-plan" id="toc-develop-a-plan" class="nav-link" data-scroll-target="#develop-a-plan">Develop a plan</a></li>
+  </ul></li>
+  <li><a href="#iterate" id="toc-iterate" class="nav-link" data-scroll-target="#iterate">Iterate</a>
+  <ul class="collapse">
+  <li><a href="#notes-on-being-a-good-scraper" id="toc-notes-on-being-a-good-scraper" class="nav-link" data-scroll-target="#notes-on-being-a-good-scraper">Notes on being a good scraper</a></li>
+  <li><a href="#code-3" id="toc-code-3" class="nav-link" data-scroll-target="#code-3">CODE</a></li>
+  </ul></li>
+  <li><a href="#web-scraping" id="toc-web-scraping" class="nav-link" data-scroll-target="#web-scraping">Web scraping</a>
+  <ul class="collapse">
+  <li><a href="#goal" id="toc-goal" class="nav-link" data-scroll-target="#goal">Goal</a></li>
+  </ul></li>
+  <li><a href="#refined-code" id="toc-refined-code" class="nav-link" data-scroll-target="#refined-code">Refined Code</a></li>
+  <li><a href="#resources" id="toc-resources" class="nav-link" data-scroll-target="#resources">Resources</a></li>
+  </ul>
+</nav>
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">rvest tutorial demonstration</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>John Little </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">December 20, 2023</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>license: “CC BY-NC”<br>
+Creative Commons: Attribution-NonCommerical<br>
+https://creativecommons.org/licenses/by-nc/4.0/</p>
+<section id="load-library-packages" class="level2">
+<h2 class="anchored" data-anchor-id="load-library-packages">Load library packages</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
+✔ dplyr     1.1.4     ✔ readr     2.1.4
+✔ forcats   1.0.0     ✔ stringr   1.5.0
+✔ ggplot2   3.4.4     ✔ tibble    3.2.1
+✔ lubridate 1.9.3     ✔ tidyr     1.3.0
+✔ purrr     1.0.2     
+── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()
+ℹ Use the conflicted package (&lt;http://conflicted.r-lib.org/&gt;) to force all conflicts to become errors</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rvest)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Attaching package: 'rvest'
+
+The following object is masked from 'package:readr':
+
+    guess_encoding</code></pre>
+</div>
+</div>
+</section>
+<section id="example" class="level2">
+<h2 class="anchored" data-anchor-id="example">Example</h2>
+<section id="import-data" class="level3">
+<h3 class="anchored" data-anchor-id="import-data">Import data</h3>
+<p>The following procedural example is based on documentation found at the <a href="https://rvest.tidyverse.org/"><code>rvest</code></a> documentation site.</p>
+<section id="import-a-webpage-using-read_html" class="level4">
+<h4 class="anchored" data-anchor-id="import-a-webpage-using-read_html">Import a webpage using <code>read_html</code></h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>results <span class="ot">&lt;-</span> <span class="fu">read_html</span>(<span class="st">"http://www.vondel.humanities.uva.nl/ecartico/persons/index.php?subtask=browse"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="results-are-in-a-list." class="level3">
+<h3 class="anchored" data-anchor-id="results-are-in-a-list.">Results are in a list.</h3>
+<p>The <code>results</code> object is a <em>list</em> (R data type.) The items in the list correspond to the basic document structure of an HTML document…</p>
+<p>Displaying the <code>results</code> object shows that the first item in the <em>list</em> is <code>head</code>. The second item is <code>body</code>. These items correspond to the basic structure of the HTML document type definition. In other words, the <em>text, links</em>, and HTML “stuff” were scraped from the web page. Specifically this stuff is found in the <em>body</em> element of the HTML document. This stuff is now stored in the <code>body</code> element of the <code>restults</code> <em>list</em>.</p>
+<p><strong>Contents of the <code>results</code> object</strong></p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>results</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>{html_document}
+&lt;html lang="en" prefix="foaf: http://xmlns.com/foaf/0.1/ owl: http://www.w3.org/2002/07/owl# schema: https://schema.org/ time: http://www.w3.org/2006/time# skos: http://www.w3.org/2004/02/skos/core# rdf: http://www.w3.org/1999/02/22-rdf-syntax-ns# bio: http://purl.org/vocab/bio/0.1/ wdps: http://www.wikidata.org/prop/statement/ ecartico: http://www.vondel.humanities.uva.nl/ecartico/lod/vocab/# rdfs: http://www.w3.org/2000/01/rdf-schema# pnv: https://w3id.org/pnv# sem: http://semanticweb.cs.vu.nl/2009/11/sem/ ogcgs: http://www.opengis.net/ont/geosparql# ogcsf: http://www.opengis.net/ont/sf#" id="description"&gt;
+[1] &lt;head about="#description" typeof="schema:CreativeWork schema:DataFeedIte ...
+[2] &lt;body&gt;\n\n\n\n&lt;div id="projecttitle"&gt;\n\n&lt;div id="projecttop"&gt;\n&lt;a href=" ...</code></pre>
+</div>
+</div>
+<p><strong>Example HTML</strong></p>
+<p>A simplified example HTML document</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode html code-with-copy"><code class="sourceCode html"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">HTML</span><span class="dt">&gt;</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">HEAD</span><span class="dt">&gt;</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">title</span><span class="dt">&gt;</span>my example document<span class="dt">&lt;/</span><span class="kw">title</span><span class="dt">&gt;</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;/</span><span class="kw">HEAD</span><span class="dt">&gt;</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;</span><span class="kw">BODY</span><span class="dt">&gt;</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">h1</span><span class="dt">&gt;</span>Hello World<span class="dt">&lt;/</span><span class="kw">h1</span><span class="dt">&gt;</span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">p</span><span class="dt">&gt;</span>HTML is a tagging system known as the HypterText Markup Language<span class="dt">&lt;/</span><span class="kw">p</span><span class="dt">&gt;</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>  <span class="dt">&lt;/</span><span class="kw">BODY</span><span class="dt">&gt;</span></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">HTML</span><span class="dt">&gt;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="procedure" class="level3">
+<h3 class="anchored" data-anchor-id="procedure">Procedure</h3>
+<p>The basic workflow of web scraping is</p>
+<ol type="1">
+<li><p>Development</p>
+<ul>
+<li>Import raw HTML of a single target page (page detail, or “leaf”)</li>
+<li><em>Parse</em> the HTML of the test page to gather the data you want</li>
+<li>In a web browser, manually browse and understand the site navigation of the scrape target (site navigation, or “branches”)</li>
+<li><em>Parse</em> the site navigation and develop an interation plan</li>
+<li>Iterate: write code that implements iteration, i.e.&nbsp;automated page <em>crawling</em></li>
+<li>Perform a dry run with a limited subset of the target web site</li>
+<li>check robots.txt, terms of use, and construct time pauses (to avoid DNS attacks)</li>
+</ul></li>
+<li><p>Production</p>
+<ul>
+<li><p>Iterate</p>
+<ol type="a">
+<li><strong>Crawl</strong> the site navigation (branches)</li>
+<li><strong>Parse</strong> HTML for each detail page (leaves)</li>
+</ol></li>
+</ul></li>
+</ol>
+</section>
+<section id="parse-the-nodes-of-the-html-tree." class="level3">
+<h3 class="anchored" data-anchor-id="parse-the-nodes-of-the-html-tree.">Parse the nodes of the HTML tree.</h3>
+<p>A web page is composed of HTML and prose. The web document, just as the web site, has a hierarchical structure. Web scraping means parsing these structures to gather needed information.</p>
+<p>The first step is to start with a single target single document (i.e.&nbsp;a web page or a leaf of the site). In this case, the document we want to parse is the <a href="http://www.vondel.humanities.uva.nl/ecartico/persons/index.php?subtask=browse">summary navigation page</a> consisting of the first 50 names listed alphabetically in this web site. The goal is to parse the HTML source of that web page (i.e.&nbsp;document) by traversing the nodes of the document’s HTML structure. In other words, we want to mine text and data from the <code>body</code> section of the <code>results</code> <em>list</em>. In this example I’ll gather all the HTML within the <code>&lt;li&gt;</code> tags.</p>
+<p><code>li</code> stands for “list item”. You can learn more about the <em>li</em> tag structure from <a href="https://www.w3schools.com/TAGS/tag_li.asp">HTML documentation</a>.</p>
+<section id="goal-briefly" class="level4">
+<h4 class="anchored" data-anchor-id="goal-briefly">Goal: Briefly…</h4>
+<ul>
+<li>limit the results to the <em>list item</em> <strong>nodes</strong> of the <code>body</code> of the HTML document tree. This is done with the <code>html_nodes()</code> function.<code>html_nodes("li")</code></li>
+<li>Use the <code>html_text()</code> function to parse the text of the HTML <em>list item</em> (i.e.&nbsp;the <code>&lt;li&gt;</code> tag)</li>
+</ul>
+</section>
+<section id="for-example" class="level4">
+<h4 class="anchored" data-anchor-id="for-example">For Example</h4>
+<p>in an HTML document that has tagging such as this:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode html code-with-copy"><code class="sourceCode html"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">li</span><span class="dt">&gt;&lt;</span><span class="kw">a</span><span class="ot"> href</span><span class="op">=</span><span class="st">"/ecartico/persons/17296"</span><span class="dt">&gt;</span>Anna Aaltse (1715 - 1738)<span class="dt">&lt;/</span><span class="kw">a</span><span class="dt">&gt;&lt;/</span><span class="kw">li</span><span class="dt">&gt;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>I want to gather the text within the <code>&lt;li&gt;</code> tag: e.g.&nbsp;<strong>Anna Aaltse (1715 - 1738)</strong></p>
+<p>You can use the <a href="https://selectorgadget.com/">Selector Gadget</a> to help you identify the HTML/CSS tags and codes.</p>
+</section>
+<section id="code" class="level4">
+<h4 class="anchored" data-anchor-id="code">CODE</h4>
+<p>Using the <code>html_nodes()</code> and <code>html_text()</code> functions, I can retrieve all the text within <code>&lt;li&gt;&lt;/li&gt;</code> tags.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>names <span class="ot">&lt;-</span> results <span class="sc">%&gt;%</span> </span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">html_nodes</span>(<span class="st">"#setwidth li a"</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">html_text</span>()</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>names</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "Hillebrand Boudewynsz. van der Aa (1661 - 1717)"
+ [2] "Boudewijn Pietersz van der Aa (? - ?)"          
+ [3] "Pieter Boudewijnsz. van der Aa (1659 - 1733)"   
+ [4] "Boudewyn  van der Aa (1672 - ca. 1718)"         
+ [5] "Machtelt  van der Aa (? - ?)"                   
+ [6] "Claas van der Aa I (? - ?)"                     
+ [7] "Claas van der Aa II (? - ?)"                    
+ [8] "Willem van der Aa (? - ?)"                      
+ [9] "Johanna  van der Aa (? - ?)"                    
+[10] "Hans  von Aachen (1552 - 1615)"                 
+[11] "Jacobus van Aaken (? - ?)"                      
+[12] "Justus van Aaken (? - ?)"                       
+[13] "Johannes  van Aalburg (1717 - 1777)"            
+[14] "Johannes   Aalmis (1714 - 1799)"                
+[15] "Johan Bartholomeus   Aalmis (1723 - 1786)"      
+[16] "Maria  van Aalst (1639 - 1664)"                 
+[17] "Anna   Aalst (? - ?)"                           
+[18] "Anna   Aaltse (1715 - 1738)"                    
+[19] "Allart   Aaltsz (1665 - 1748)"                  
+[20] "Geertruy   Aaltsz (? - 1732)"                   
+[21] "Maria   Aaltsz (? - 1746)"                      
+[22] "Catharina   Aaltsz (? - 1727)"                  
+[23] "Nikolaas  van Aaltwijk (1692 - 1727)"           
+[24] "Maria   Aams (1711 - 1774)"                     
+[25] "Jacobus   Aams (1680 - ?)"                      
+[26] "Jan Govertsz. van der Aar (1544 - 1612)"        
+[27] "Anna  van der Aar (1576 - 1656)"                
+[28] "Janneke Jans van Aarden (1609 - 1651)"          
+[29] "Abraham  van Aardenberg (1672 - 1717)"          
+[30] "Willem Aardenhout I (? - ?)"                    
+[31] "Margrietje   Aarlincx (1637 - 1690)"            
+[32] "Dirck  van Aart (1680 - 1737)"                  
+[33] "Jonas   Abarbanel (? - 1667)"                   
+[34] "Josephus   Abarbanel (? - ?)"                   
+[35] "Esther    Abarbanel (? - ?)"                    
+[36] "Rachel   Abarbanel (? - ?)"                     
+[37] "Lea   Abarbanel (1691 - ?)"                     
+[38] "Isaac   Abarbanel (1637 - 1723)"                
+[39] "Damiana    Abarca (? - 1630)"                   
+[40] "Bartholomeus   Abba (1641 - 1684)"              
+[41] "Cornelis  Dirksz.   Abba (1604 - 1675)"         
+[42] "Clara   Abba (1631 - 1671)"                     
+[43] "Aerlant   Abbas (1606 - 1696)"                  
+[44] "Matheus Jansz  Abbas (1569 - ?)"                
+[45] "Hendrik   Abbé (1639 - 1677)"                   
+[46] "Claude   Abbé (? - 1653)"                       
+[47] "Simon Jan Pontenz.  Abbe (1467 - 1549)"         
+[48] "Simon IJsbrandz.  Abbe (? - ?)"                 
+[49] "Ysbrandt Simonsz.  Abbe (? - 1559)"             
+[50] "Maximiliaen  l' Abbé (? - 1675)"                </code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="parse-the-html-attributes-of-an-html-tag" class="level3">
+<h3 class="anchored" data-anchor-id="parse-the-html-attributes-of-an-html-tag">Parse the HTML attributes of an HTML tag…</h3>
+<p>Beyond the text you may also want attributes of HTML tags. To mine the URL of a hypertext link <code>&lt;a href="URL"&gt;&lt;/a&gt;</code>, within a list item, you need to parse the HREF argument of an anchor tag. If you’re new to web scraping, you’re going to need to learn something about HTML tags, such as the <a href="https://www.w3schools.com/TAGS/tag_a.asp">anchor tag</a>.</p>
+<section id="for-example-1" class="level4">
+<h4 class="anchored" data-anchor-id="for-example-1">For Example</h4>
+<p>in an HTML document that has tagging such as this:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode html code-with-copy"><code class="sourceCode html"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">a</span><span class="ot"> href</span><span class="op">=</span><span class="st">"https://search.com"</span><span class="dt">&gt;</span>Example Link<span class="dt">&lt;/</span><span class="kw">a</span><span class="dt">&gt;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>I want to gather the value of the <code>href</code> attribute within the anchor tag: <strong>https://search.com</strong></p>
+</section>
+<section id="code-1" class="level4">
+<h4 class="anchored" data-anchor-id="code-1">CODE</h4>
+<p>Using the <code>html_nodes()</code> and <code>html_attr()</code> functions, I can retrieve all the attribute values within <code>&lt;li&gt;&lt;a&gt;&lt;/a&gt;&lt;/li&gt;</code> tags.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>url <span class="ot">&lt;-</span> results <span class="sc">%&gt;%</span> </span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">html_nodes</span>(<span class="st">"#setwidth li a"</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">html_attr</span>(<span class="st">"href"</span>)</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>url</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "../persons/414"   "../persons/10566" "../persons/10567" "../persons/10568"
+ [5] "../persons/27132" "../persons/33780" "../persons/33781" "../persons/33782"
+ [9] "../persons/59894" "../persons/9203"  "../persons/33052" "../persons/33053"
+[13] "../persons/58654" "../persons/43671" "../persons/43672" "../persons/30222"
+[17] "../persons/38845" "../persons/17296" "../persons/38518" "../persons/38523"
+[21] "../persons/38524" "../persons/38525" "../persons/43337" "../persons/42619"
+[25] "../persons/42620" "../persons/41311" "../persons/49902" "../persons/20653"
+[29] "../persons/47922" "../persons/33783" "../persons/42051" "../persons/28921"
+[33] "../persons/37887" "../persons/37890" "../persons/37892" "../persons/38352"
+[37] "../persons/42876" "../persons/42881" "../persons/22859" "../persons/52962"
+[41] "../persons/52963" "../persons/52965" "../persons/17297" "../persons/55241"
+[45] "../persons/416"   "../persons/11593" "../persons/41739" "../persons/41742"
+[49] "../persons/41743" "../persons/52649"</code></pre>
+</div>
+</div>
+<p>Note that the above links, or <em>hrefs</em>, are relative URL paths. I still need the domain name for the web server <code>http://www.vondel.humanities.uva.nl</code>.</p>
+</section>
+</section>
+</section>
+<section id="systematize-targets" class="level2">
+<h2 class="anchored" data-anchor-id="systematize-targets">Systematize targets</h2>
+<p>Above I created two vectors, one vector, <code>names</code>, is the <code>html_text</code> that I parsed from the <code>&lt;li&gt;</code> tags within the <code>&lt;body&gt;</code> of the HTML document. The other vector, <code>url</code>, is a vector of the values of the <code>href</code> attribute of the anchor <code>&lt;a&gt;</code> tags.</p>
+<p>Placing both vectors into a tibble makes manipulation easier when using tidyverse techniques.</p>
+<p><strong>Goal</strong></p>
+<p>I want to develop a systematic workflow that builds a tibble consisting of each of the 50 names listed in the summary <code>results</code> object retrieved by <code>read_html()</code> performed on <a href="http://www.vondel.humanities.uva.nl/ecartico/persons/index.php?subtask=browse">this page</a>. Of course, mining and parsing the data is just the beginning. Data cleaning is a vital and constant aspect of web scraping.</p>
+<section id="build-tibble" class="level3">
+<h3 class="anchored" data-anchor-id="build-tibble">Build Tibble</h3>
+<p>Using vectors from parsing functions above….</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>results_df <span class="ot">&lt;-</span> <span class="fu">tibble</span>(names, url)</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>results_df</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 50 × 2
+   names                                           url             
+   &lt;chr&gt;                                           &lt;chr&gt;           
+ 1 Hillebrand Boudewynsz. van der Aa (1661 - 1717) ../persons/414  
+ 2 Boudewijn Pietersz van der Aa (? - ?)           ../persons/10566
+ 3 Pieter Boudewijnsz. van der Aa (1659 - 1733)    ../persons/10567
+ 4 Boudewyn  van der Aa (1672 - ca. 1718)          ../persons/10568
+ 5 Machtelt  van der Aa (? - ?)                    ../persons/27132
+ 6 Claas van der Aa I (? - ?)                      ../persons/33780
+ 7 Claas van der Aa II (? - ?)                     ../persons/33781
+ 8 Willem van der Aa (? - ?)                       ../persons/33782
+ 9 Johanna  van der Aa (? - ?)                     ../persons/59894
+10 Hans  von Aachen (1552 - 1615)                  ../persons/9203 
+# ℹ 40 more rows</code></pre>
+</div>
+</div>
+<p>From above we have links in a <code>url</code> vector, and target names in a <code>names</code> vector, for fifty names from the target website we want to crawl. Of course you also want to parse data for each person in the database. To do this we need to read (i.e.&nbsp;<code>read_html()</code>) the HTML for each relevant <code>url</code> in the results_df tibble. Below is an example of how to systematize the workflow. To do that, we’ll make a results tibble, <code>results_df</code>. But first, more data cleaning…</p>
+<p>Create some new variables with <code>mutate</code>. Build a <strong>full</strong> URL from the <em>relative URL path</em> (i.e.&nbsp;the <code>url</code> vector) and the domain or <em>base URL</em> of the target site. Since we scraped the relative URL <strong>path</strong>, we have to construct a <strong>full</strong> URL.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>urls_to_crawl_df <span class="ot">&lt;-</span> results_df <span class="sc">%&gt;%</span> </span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">url =</span> <span class="fu">str_replace</span>(url, <span class="st">"</span><span class="sc">\\</span><span class="st">.</span><span class="sc">\\</span><span class="st">."</span>, <span class="st">"ecartico"</span>)) <span class="sc">%&gt;%</span>   <span class="co"># fixing a relative path reference by replacing '..' with 'ecartico' </span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">full_url =</span> glue<span class="sc">::</span><span class="fu">glue</span>(<span class="st">"http://www.vondel.humanities.uva.nl/{url}"</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>  <span class="co"># mutate(full_url = str_replace_all(full_url, "\\.\\.", "")) %&gt;% </span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(full_url)</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>urls_to_crawl_df  </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 50 × 1
+   full_url                                                  
+   &lt;glue&gt;                                                    
+ 1 http://www.vondel.humanities.uva.nl/ecartico/persons/414  
+ 2 http://www.vondel.humanities.uva.nl/ecartico/persons/10566
+ 3 http://www.vondel.humanities.uva.nl/ecartico/persons/10567
+ 4 http://www.vondel.humanities.uva.nl/ecartico/persons/10568
+ 5 http://www.vondel.humanities.uva.nl/ecartico/persons/27132
+ 6 http://www.vondel.humanities.uva.nl/ecartico/persons/33780
+ 7 http://www.vondel.humanities.uva.nl/ecartico/persons/33781
+ 8 http://www.vondel.humanities.uva.nl/ecartico/persons/33782
+ 9 http://www.vondel.humanities.uva.nl/ecartico/persons/59894
+10 http://www.vondel.humanities.uva.nl/ecartico/persons/9203 
+# ℹ 40 more rows</code></pre>
+</div>
+</div>
+<p>As you can see, above, it’s really helpful to know about Tidyverse text manipulation, specifically <code>mutate</code>, <a href="https://glue.tidyverse.org/"><code>glue</code></a>, and <a href="https://r4ds.had.co.nz/strings.html">pattern matching and regex</a> using the <a href="https://stringr.tidyverse.org/">stringr package</a>.</p>
+</section>
+<section id="operationalize-the-workflow" class="level3">
+<h3 class="anchored" data-anchor-id="operationalize-the-workflow">Operationalize the workflow</h3>
+<p>To operationalize this part of the workflow, you want to iterate over the vector <code>full_url</code> found in the <code>urls_to_crawl_df</code> tibble. Then <code>read_html</code> for each name that interest you. Remember that only 50 of the 54 rows in the <code>resutls_df</code> tibble are target names to crawl. So, really, you still have some data wrangling to do. How can you eliminate the four rows in the <code>results_df</code> tibble that are not targets (i.e.&nbsp;names)? Somewhere, below, I’ll also show you how to exclude the four rows of unnecessary/unhelpful information.</p>
+</section>
+</section>
+<section id="navigation-and-crawling" class="level2">
+<h2 class="anchored" data-anchor-id="navigation-and-crawling">Navigation and crawling</h2>
+<p>Meanwhile, we still have the <strong>goal to systematically crawl the site’s navigation links</strong> for each of the 20+ summary results pages, each of which consists of fifty names. Remember, each summary results page also has links to web site <strong>navigation</strong>. Navigation links are the <strong>key to crawling</strong> through the other summary results pages. You will need to write code that crawls through the navigation links, then <code>read_html()</code> for each of the fifty name/urls in that particular summary results page.</p>
+<p>Therefore, one crawling <strong>goal</strong> is to build up a tibble that contains URLS for each summary results page. So far we only have links to fifty names from the first summary results page. We don’t have the URLs for each of the 20+ navigation pages. How do we get those? First find the pattern for the links to the navigation pages. Let’s get the navigation link to the <a href="http://www.vondel.humanities.uva.nl/ecartico/persons/index.php?subtask=browse&amp;field=surname&amp;strtchar=A&amp;page=2">second summary results page</a>.</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode html code-with-copy"><code class="sourceCode html"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>http://www.vondel.humanities.uva.nl/ecartico/persons/index.php?subtask=browse<span class="er">&amp;</span>field=surname<span class="er">&amp;</span>strtchar=A<span class="er">&amp;</span>page=2</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>After some investigation of the the HTML source, I see the only difference bewteen navigation URLS is the value of the URL argument <code>page=</code>. Eventually we need to construct a tibble with all the URLs for each of the navigation pages. But first, let’s learn a bit more about HTML parsing.</p>
+<section id="deconstructing-a-single-target-page-and-site-design" class="level3">
+<h3 class="anchored" data-anchor-id="deconstructing-a-single-target-page-and-site-design">Deconstructing a single target page and site design</h3>
+<p>So far we’ve used <code>rvest</code> functions and learned a little HTML. You <strong>also need to know about</strong> <a href="https://en.wikipedia.org/wiki/CSS"><strong>CSS</strong> (Cascading Style Sheets)</a>.</p>
+<p>You can follow the link above for a definition of CSS. As a quickstart approach, I recommend playing this <a href="https://flukeout.github.io/">CSS game</a> as a fun and quick way to learn just enough CSS. I completed the first 15 levels of the game; that was enough to get a good foundation with CSS. Depending on the complexity of the HTML and CSS, you may need to know a little more or a little less. But you need to know something about HTML and CSS.</p>
+<p><strong>CSS</strong> will help us subset the HTML for a single target page. I didn’t mention it before but, you often need to <a href="https://www.lifewire.com/view-html-source-in-chrome-3466725">view the source of the HTML</a>; use the <a href="https://www.wikihow.com/Inspect-Element-on-Chrome">chrome browser to inspect elements</a> of pages in a web browser; and use the chrome browser extension, <a href="https://rvest.tidyverse.org/articles/selectorgadget.html">selector gadget</a>, to better understand the HTML and CSS tagging and structure.</p>
+<p>This is key. When web scraping, you are effectively reverse engineering the web site. To reverse engineer it, you must have a solid understanding of the target site’s structure, the site navigation, HTML, and CSS. Knowledge of the site structure is independent of R, <code>rvest</code>, <em>lists</em>, and <code>purrr</code>.</p>
+<p>Anyway, an example of a CSS element in the results page is ‘class’ attribute of the <code>&lt;div&gt;</code> tag. In the case below we also have a class value of “subnav”. Viewing the source HTML of one summary results page will show the <code>&lt;div&gt;</code> tags with the CSS <em>class</em> element.</p>
+<section id="for-example-2" class="level4">
+<h4 class="anchored" data-anchor-id="for-example-2">For Example</h4>
+<p>Use is <code>html_nodes()</code> with <code>html_text()</code>, and <code>html_attr()</code> to parse the anchor tag nodes, <code>&lt;a&gt;</code>, found within the <code>&lt;div&gt;</code> tags which contain the <code>class="subnav"</code> attribute.</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode html code-with-copy"><code class="sourceCode html"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">div</span><span class="ot"> class </span><span class="op">=</span> <span class="st">"subnav"</span><span class="dt">&gt;</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    ...</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    <span class="dt">&lt;</span><span class="kw">a</span><span class="ot"> href</span><span class="op">=</span><span class="st">"/ecartico/persons/index.php?subtask=browse</span><span class="dv">&amp;amp;</span><span class="st">field=surname</span><span class="dv">&amp;amp;</span><span class="st">strtchar=A</span><span class="dv">&amp;amp;</span><span class="st">page=3"</span><span class="dt">&gt;</span>[101-150]<span class="dt">&lt;/</span><span class="kw">a</span><span class="dt">&gt;</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>    ...</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;/</span><span class="kw">div</span><span class="dt">&gt;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="code-2" class="level4">
+<h4 class="anchored" data-anchor-id="code-2">CODE</h4>
+<p>Parse the <strong>text</strong> of the navigation bar.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>results <span class="sc">%&gt;%</span> <span class="co">#html_nodes("div.subnav")</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">html_nodes</span>(<span class="st">"form+ .subnav"</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">html_text</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "Results:  [1-50] [51-100] [101-150] [151-200] [201-250] [...]  [1301-1309]"</code></pre>
+</div>
+</div>
+<p>Parse the HTML <em>href</em> <strong>attribute</strong> to get the URL.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>navigation <span class="ot">&lt;-</span> results <span class="sc">%&gt;%</span> </span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">html_nodes</span>(<span class="st">"form+ .subnav a"</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">html_attr</span>(<span class="st">"href"</span>)</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>navigation</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "index.php?subtask=browse&amp;field=surname&amp;strtchar=A&amp;page=2" 
+[2] "index.php?subtask=browse&amp;field=surname&amp;strtchar=A&amp;page=3" 
+[3] "index.php?subtask=browse&amp;field=surname&amp;strtchar=A&amp;page=4" 
+[4] "index.php?subtask=browse&amp;field=surname&amp;strtchar=A&amp;page=5" 
+[5] "index.php?subtask=browse&amp;field=surname&amp;strtchar=A&amp;page=27"</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="crawl-summary-results-pages" class="level3">
+<h3 class="anchored" data-anchor-id="crawl-summary-results-pages">Crawl summary results pages</h3>
+<p>We want to gain a clear sense of the predictable navigation structure of our target site, and the navigation URLs, so that we can <strong>crawl</strong> through each page of the target site. Again, the task before us is to do this crawling systematically. Let’s put the <code>navigation</code> object into a tibble data-frame called <code>nav_df</code>.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>nav_df <span class="ot">&lt;-</span> <span class="fu">tibble</span>(navigation)</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>nav_df</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 5 × 1
+  navigation                                               
+  &lt;chr&gt;                                                    
+1 index.php?subtask=browse&amp;field=surname&amp;strtchar=A&amp;page=2 
+2 index.php?subtask=browse&amp;field=surname&amp;strtchar=A&amp;page=3 
+3 index.php?subtask=browse&amp;field=surname&amp;strtchar=A&amp;page=4 
+4 index.php?subtask=browse&amp;field=surname&amp;strtchar=A&amp;page=5 
+5 index.php?subtask=browse&amp;field=surname&amp;strtchar=A&amp;page=27</code></pre>
+</div>
+</div>
+<p>In the above tibble, I see I need to <strong>clean</strong> the <code>nav_df$navigation</code> vector so that only the unique URLs for each 50-result summary page remain. One problem is there are only 14 rows and a lot of redundancy and many missing summary page URLS. One reason I know this is that I have a link for page 2, 3, 4, 5, and 22; but nothing, no URLs for pages between pages 6 and 21. This mirrors what we see when we <a href="http://www.vondel.humanities.uva.nl/ecartico/persons/index.php?subtask=browse">view the actual target web page in a web browser</a>. That is, I have links for <strong>results</strong> [1-50], [51-100], [100-150], but nothing for [251-260] (i.e.&nbsp;page 6), etc. The target page is composed of HTML and CSS and comprises what we have in our imported <code>results</code> object, above. To confirm my investigation, I’ll use a web browser to <strong>view</strong> the HTML <strong>source</strong> of one of the summary pages. The unparsed HTML is what you have in <code>results</code> object.</p>
+<p>What I see in the view source or the <code>nav_df$navigation</code> vector is that each navigation URL is the same, <strong>except</strong> for the difference in the <code>page=</code> element found at the end of the URL argument.</p>
+</section>
+<section id="mini-review-summary" class="level3">
+<h3 class="anchored" data-anchor-id="mini-review-summary">Mini review summary</h3>
+<p>We can see that the navigation URL pattern is predictable. We can construct a full URL for each summary results target page. We can make a tibble with all these links, one row for each URL to each navigation section of each summary results page of the target site. Once we have this, we can write a script to systematically browse, or crawl, through the target site just as if we manually mouse-clicked each link in a web browser. We will use tidyverse packages to crawl through the site and <code>rvest::html_read()</code> to import the HTML. After we crawl each page, we’ll parse the target HTML data.</p>
+</section>
+<section id="develop-a-plan" class="level3">
+<h3 class="anchored" data-anchor-id="develop-a-plan">Develop a plan</h3>
+<p><strong>Goal</strong> make a tibble with all the navigation links</p>
+<p>Let’s start by importing the HTML of a single summary results page. Then I’ll make a tibble of the navigation links found within the gathered and relevant <code>&lt;div&gt;</code> HTML tags, i.e.&nbsp;the div tags with the <em>subnav</em> CSS class. We did that with the <code>nav_df</code> tibble.</p>
+<p>After we gather those navigation links in <code>nav_df$navigation</code>, we will wrangle and expand the vector to include only the relevant navigation URLs. But, why did we have duplicate navigation URLS in that vector? Look at the <a href="http://www.vondel.humanities.uva.nl/ecartico/persons/index.php?subtask=browse">summary page</a> in a web browser. See any duplication? If not, look closer.</p>
+<p>Below, use <code>dplyr::distinct()</code> and <code>stringr::string_extract()</code> among other tidyverse functions to wrangle a tibble of relevant links.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>nav_df <span class="ot">&lt;-</span> nav_df <span class="sc">%&gt;%</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">str_detect</span>(navigation, <span class="st">"&amp;page="</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">page_no =</span> <span class="fu">str_extract</span>(navigation, <span class="st">"</span><span class="sc">\\</span><span class="st">d+$"</span>)) <span class="sc">%&gt;%</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">page_no =</span> <span class="fu">as.numeric</span>(page_no))</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>nav_df</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 5 × 2
+  navigation                                                page_no
+  &lt;chr&gt;                                                       &lt;dbl&gt;
+1 index.php?subtask=browse&amp;field=surname&amp;strtchar=A&amp;page=2        2
+2 index.php?subtask=browse&amp;field=surname&amp;strtchar=A&amp;page=3        3
+3 index.php?subtask=browse&amp;field=surname&amp;strtchar=A&amp;page=4        4
+4 index.php?subtask=browse&amp;field=surname&amp;strtchar=A&amp;page=5        5
+5 index.php?subtask=browse&amp;field=surname&amp;strtchar=A&amp;page=27      27</code></pre>
+</div>
+</div>
+<p>There’s some <em>fancy</em> regex pattern matching taking place in the data wrangling code chunk, above. Remember how I said you need to learn about pattern matching and the stringr library? Yup.</p>
+<p>Anyway…</p>
+<p>Now all we need to do is expand the sequence of pages. (Hint: <code>tidyr::expand()</code> )</p>
+<p>The maximum number of summary pages in the <code>navigation$page_no</code> variable is 22. This should mean the maximum number of URLs to summary results pages will be roughly 22. Regardless of the total number of target names/pages, our task is to build a tibble with a URL for each summary results page, i.e.&nbsp;pages 1 thorough 22. IF we have a link to each summary results page, then can we get a link for each of the fifty people listed on each of the summary result pages.</p>
+<p>Honestly, building this list of navigation URLs takes some effort in R, especially if you’re new to R. So, maybe, there’s an easier way. It might be easier to build the range of summary page URLs in Excel, then import the excel file (or CSV file) of URLs into R for crawling via <code>rvest</code>. But I want a reproducible, code-based approach.</p>
+<p>See example code, below, for a reproducible example. With the next code chunk, you can use Tidyverse techniques and build a tibble of URLs to iterate over. In this case, the important reproducible step use <code>stringr::str_extract()</code> to find and match the URL pattern.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>nav_df <span class="ot">&lt;-</span> nav_df <span class="sc">%&gt;%</span> </span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">navigation =</span> <span class="fu">str_extract</span>(navigation, <span class="st">".*(?=</span><span class="sc">\\</span><span class="st">=</span><span class="sc">\\</span><span class="st">d+$)"</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">page_no =</span> <span class="fu">as.integer</span>(<span class="fu">str_replace</span>(page_no, <span class="st">"^2$"</span>, <span class="st">"1"</span>))) <span class="sc">%&gt;%</span> </span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">expand</span>(navigation, <span class="at">page_no =</span> <span class="fu">full_seq</span>(page_no, <span class="dv">1</span>)) <span class="sc">%&gt;%</span> </span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">transmute</span>(<span class="at">url =</span> glue<span class="sc">::</span><span class="fu">glue</span>(<span class="st">"http://www.vondel.humanities.uva.nl/ecartico/persons/{navigation}={page_no}"</span>))</span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a><span class="co"># the regular expression '.*(?=\\=\\d+$)' can be read as: </span></span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a><span class="co"># capture/find data found BEFORE '(?=&lt;&lt;pattern&gt;&gt;)' the pattern.  </span></span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a><span class="co"># The pattern is =&lt;digit&gt;&lt;digit&gt;, </span></span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a><span class="co"># the '=' sign has to be "escaped"  '\\='.  </span></span>
+<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a><span class="co"># The precise regex pattern syntax has the equal sign followed by a digit '\\d'.</span></span>
+<span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a><span class="co"># multiple digits  '+',  i.e. '\\d+'</span></span>
+<span id="cb29-13"><a href="#cb29-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Since the digits are found at the end of the value of the variable, use an anchor </span></span>
+<span id="cb29-14"><a href="#cb29-14" aria-hidden="true" tabindex="-1"></a><span class="co"># To anchor the end of the regex pattern, use the '$' regex anchor notation.</span></span>
+<span id="cb29-15"><a href="#cb29-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Remember, we are matching everything before the pattern.  Match with the wildcard: '.*'</span></span>
+<span id="cb29-16"><a href="#cb29-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Honestly, there's no substitute for knowing a bit about regex when you're coding.</span></span>
+<span id="cb29-17"><a href="#cb29-17" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb29-18"><a href="#cb29-18" aria-hidden="true" tabindex="-1"></a><span class="co"># See the "work with strings" cheatsheet.  https://rstudio.com/resources/cheatsheets/</span></span>
+<span id="cb29-19"><a href="#cb29-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-20"><a href="#cb29-20" aria-hidden="true" tabindex="-1"></a>nav_df</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 27 × 1
+   url                                                                          
+   &lt;glue&gt;                                                                       
+ 1 http://www.vondel.humanities.uva.nl/ecartico/persons/index.php?subtask=brows…
+ 2 http://www.vondel.humanities.uva.nl/ecartico/persons/index.php?subtask=brows…
+ 3 http://www.vondel.humanities.uva.nl/ecartico/persons/index.php?subtask=brows…
+ 4 http://www.vondel.humanities.uva.nl/ecartico/persons/index.php?subtask=brows…
+ 5 http://www.vondel.humanities.uva.nl/ecartico/persons/index.php?subtask=brows…
+ 6 http://www.vondel.humanities.uva.nl/ecartico/persons/index.php?subtask=brows…
+ 7 http://www.vondel.humanities.uva.nl/ecartico/persons/index.php?subtask=brows…
+ 8 http://www.vondel.humanities.uva.nl/ecartico/persons/index.php?subtask=brows…
+ 9 http://www.vondel.humanities.uva.nl/ecartico/persons/index.php?subtask=brows…
+10 http://www.vondel.humanities.uva.nl/ecartico/persons/index.php?subtask=brows…
+# ℹ 17 more rows</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="iterate" class="level2">
+<h2 class="anchored" data-anchor-id="iterate">Iterate</h2>
+<p>Use <code>purrr::map</code> <strong>instead</strong> of <strong>‘for’</strong> loops. Because <a href="https://purrr.tidyverse.org">purrr</a> is the R/Tidyverse way. ‘For’ loops are fine, but invest some time learning purrr and you’ll be better off. Still, there’s no wrong way to iterate as long as you get the right answer. So, do what works. Below is the Tidyverse/Purrr way….</p>
+<p>Now that I have a full list of navigation URLs, each of which represents a web page that has a summary of 50 names/links. My next task is to read the HTML of each URL representing a target-page – in this case a target is a detailed page with structured biographical information about an artist. By reading the URL (importing the HTML) for each target name, I will then have HTML for each individual target person. Of course, I still, then, have to read and parse the HTML of those target-name pages, but I can do that. The scraping (crawling + parsing) works when I have a URL per target person. Because, having a URL for each target-person’s page means I can systematically scrape the web site. In other words, I can crawl the summary navigation to construct a full URL for each name (i.e page.) Then I import (i.e.&nbsp;<code>read_html()</code>) each person’s page and parse the HTML for each person’s information.</p>
+<p>But, back to the current task: import the HTML for each summary results page of 50 records…</p>
+<blockquote class="blockquote">
+<p>You should read the notes below, but tl;dr: skip to the CODE below</p>
+</blockquote>
+<section id="notes-on-being-a-good-scraper" class="level3">
+<h3 class="anchored" data-anchor-id="notes-on-being-a-good-scraper">Notes on being a good scraper</h3>
+<section id="pause" class="level4">
+<h4 class="anchored" data-anchor-id="pause">Pause</h4>
+<p><strong>Note</strong>: that, below, I introduce a <strong>pause</strong> (<code>Sys.sleep()</code>) in front of each <code>read_html()</code> function. This is a common technique for well behaved web scraping. Pausing before each <code>read_html</code> function, avoids overwhelming my target’s server/network infrastructure. If I overwhelm the target server, the server host-people may consider me a DNS attack. If they think I’m a DNS attacker, they might choose to block my computer from crawling their site. If that happens, I’m up a creek. I don’t want that. I want my script to be a well behaved bot-crawler.</p>
+</section>
+<section id="robots.txt" class="level4">
+<h4 class="anchored" data-anchor-id="robots.txt">robots.txt</h4>
+<p>Speaking of being a good and honorable scraper-citizen, did I browse the <a href="http://www.vondel.humanities.uva.nl/robots.txt">robots.txt</a> page for the site? Did I check the site for a Terms of Service page? Did I look to see if there were any written prohibitions against web crawling, systematic downloading, copyright, or licensing restrictions? I did <strong>and you should too</strong>. As of this writing, there do not appear to be any restrictions for this site. You should perform these types of good-scraping hygiene steps for every site you want to scrape!</p>
+</section>
+<section id="development-v-production" class="level4">
+<h4 class="anchored" data-anchor-id="development-v-production">Development v production</h4>
+<p>Note: Below, for <strong>development</strong> purposes, I limit my crawling to 3 results pages of fifty links each: <code>my_url_df$url[1:3]</code>. Be conservative during your code development to avoid appearing as a DNS attacker. Later, when you are ready to crawl your whole target site, you’ll want to remove such limits (i.e.&nbsp;<code>[1:3]</code>.) But for now, do everyone a favor and try not to be over confident. Stay in the kiddie pool. Do your development work until you are sure you’re not accidentally unleashing a malicious or poorly constructed web crawler.</p>
+</section>
+<section id="keep-records-of-critical-data" class="level4">
+<h4 class="anchored" data-anchor-id="keep-records-of-critical-data">Keep records of critical data</h4>
+<p>Note: Below, I am keeping the original target URL variable, <code>summary_url</code>, for later reference. This way I will have a record of which parsed data results came from which URL web page.</p>
+</section>
+<section id="working-with-lists" class="level4">
+<h4 class="anchored" data-anchor-id="working-with-lists">Working with lists</h4>
+<p>Note: Below, the final result is a tibble with a vector, <code>summary_url</code>, and an associated column of HTML results, each result is stored as a nested R <em>list</em>. That is, a column of data types that are all “<em>lists</em>”, aka a “<em>list column</em>”. Personally I find lists to be a pain. I prefer working with tibbles (aka <em>data frames</em>.). But <em>lists</em> appear often in R data wrangling, especially when scraping with <code>rvest</code>. The more you work with <em>lists</em>, the more you come to tolerate <em>lists</em> for the flexible data type that they are. Anyway, if I were to look at only the first row of results from the html_results column, <code>nav_results_list$html_results[1]</code>, I would find a <em>list</em> of the raw HTML from the first summary results page imported via <code>read_html()</code>.</p>
+</section>
+</section>
+<section id="code-3" class="level3">
+<h3 class="anchored" data-anchor-id="code-3">CODE</h3>
+<blockquote class="blockquote">
+<p><strong>tl;dr</strong> This is testing. I have three URLs <code>(html_reults[1:3])</code>, one for each of the first three navigation summary pages. Each summary page will contain the raw HTML for 50 names. I will <code>read_html</code> each link, waiting 2 seconds between each <code>read_html</code>.</p>
+</blockquote>
+<section id="map-the-read_html-function" class="level4">
+<h4 class="anchored" data-anchor-id="map-the-read_html-function">map the read_html() function</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>nav_results_list <span class="ot">&lt;-</span> <span class="fu">tibble</span>(</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">html_results =</span> <span class="fu">map</span>(nav_df<span class="sc">$</span>url[<span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>],  <span class="co">#url[1:3] - limiting to the first three summary results pages (each page = 50 results)</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>    <span class="sc">~</span> {</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>      <span class="fu">Sys.sleep</span>(<span class="dv">2</span>)</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>      <span class="co"># DO THIS!  sleep 2 will pause 2 seconds between server requests to avoid being identified and potentially blocked by my target web server that might see my crawling bot as a DNS attack.</span></span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>      .x <span class="sc">%&gt;%</span></span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>        <span class="fu">read_html</span>()</span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>    }),</span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">summary_url =</span> nav_df<span class="sc">$</span>url[<span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>]</span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a>nav_results_list</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 2
+  html_results summary_url                                                      
+  &lt;list&gt;       &lt;glue&gt;                                                           
+1 &lt;xml_dcmn&gt;   http://www.vondel.humanities.uva.nl/ecartico/persons/index.php?s…
+2 &lt;xml_dcmn&gt;   http://www.vondel.humanities.uva.nl/ecartico/persons/index.php?s…
+3 &lt;xml_dcmn&gt;   http://www.vondel.humanities.uva.nl/ecartico/persons/index.php?s…</code></pre>
+</div>
+</div>
+<p>Above, I have three rows of <em>lists</em>, each list is the read_html() results of a summary results page, i.e.&nbsp;each list has 50 URLs and text of my eventual targets.</p>
+<ul>
+<li><code>nav_results_list$summary_url</code> is the URL for each summary page.<br>
+</li>
+<li><code>nav_results_list$html_results</code> is the <code>read_html()</code> results that I want to parse for the href attributes and the html_text</li>
+</ul>
+</section>
+<section id="map-parsing-functions" class="level4">
+<h4 class="anchored" data-anchor-id="map-parsing-functions">map parsing functions</h4>
+<p>Right. Using purrr (<code>map()</code>), I can iterate over the html_results <em>lists</em>, parsing each <em>list</em> with the <code>html_attr()</code> and <code>html_text()</code> functions. It is convenient to keep this parsed data in a tibble as a list: one column for the URL targets ; one column for the html text (which will contain the names of the person for whom the target URL corresponds.) The results are nested lists within a tibble.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>results_by_page <span class="ot">&lt;-</span> <span class="fu">tibble</span>(<span class="at">summary_url =</span> nav_results_list<span class="sc">$</span>summary_url, </span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>                          <span class="at">url =</span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>                            <span class="fu">map</span>(nav_results_list<span class="sc">$</span>html_results,</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>                                <span class="sc">~</span> .x <span class="sc">%&gt;%</span></span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>                                  <span class="fu">html_nodes</span>(<span class="st">"#setwidth li a"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>                                  <span class="fu">html_attr</span>(<span class="st">"href"</span>)),</span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>                          <span class="at">name =</span></span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>                            <span class="fu">map</span>(nav_results_list<span class="sc">$</span>html_results,</span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>                                <span class="sc">~</span> .x <span class="sc">%&gt;%</span></span>
+<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a>                                  <span class="fu">html_nodes</span>(<span class="st">"#setwidth li a"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb33-11"><a href="#cb33-11" aria-hidden="true" tabindex="-1"></a>                                  <span class="fu">html_text</span>()</span>
+<span id="cb33-12"><a href="#cb33-12" aria-hidden="true" tabindex="-1"></a>                                )</span>
+<span id="cb33-13"><a href="#cb33-13" aria-hidden="true" tabindex="-1"></a>                          )</span>
+<span id="cb33-14"><a href="#cb33-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-15"><a href="#cb33-15" aria-hidden="true" tabindex="-1"></a>results_by_page</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 3
+  summary_url                                                        url   name 
+  &lt;glue&gt;                                                             &lt;lis&gt; &lt;lis&gt;
+1 http://www.vondel.humanities.uva.nl/ecartico/persons/index.php?su… &lt;chr&gt; &lt;chr&gt;
+2 http://www.vondel.humanities.uva.nl/ecartico/persons/index.php?su… &lt;chr&gt; &lt;chr&gt;
+3 http://www.vondel.humanities.uva.nl/ecartico/persons/index.php?su… &lt;chr&gt; &lt;chr&gt;</code></pre>
+</div>
+</div>
+</section>
+<section id="unnest" class="level4">
+<h4 class="anchored" data-anchor-id="unnest">unnest</h4>
+<p>When I unnest the nested <em>list</em>, I then have a single tibble with 150 URLs and 150 names, one row for each target name. (I also used <code>filter()</code> to do some more regex data cleanup, which I alluded to near the beginning of this document.)</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>results_by_page <span class="sc">%&gt;%</span> </span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unnest</span>(<span class="at">cols =</span> <span class="fu">c</span>(url, name)) <span class="sc">%&gt;%</span> </span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">url =</span> <span class="fu">str_replace</span>(url, <span class="st">"</span><span class="sc">\\</span><span class="st">.</span><span class="sc">\\</span><span class="st">."</span>, <span class="st">"ecartico"</span>)) <span class="sc">%&gt;%</span>   <span class="co"># fixing a relative path reference by replacing '..' with 'ecartico' </span></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">full_url =</span> glue<span class="sc">::</span><span class="fu">glue</span>(<span class="st">"http://www.vondel.humanities.uva.nl/{url}"</span>)) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 150 × 4
+   summary_url                                              url   name  full_url
+   &lt;glue&gt;                                                   &lt;chr&gt; &lt;chr&gt; &lt;glue&gt;  
+ 1 http://www.vondel.humanities.uva.nl/ecartico/persons/in… ecar… Hill… http://…
+ 2 http://www.vondel.humanities.uva.nl/ecartico/persons/in… ecar… Boud… http://…
+ 3 http://www.vondel.humanities.uva.nl/ecartico/persons/in… ecar… Piet… http://…
+ 4 http://www.vondel.humanities.uva.nl/ecartico/persons/in… ecar… Boud… http://…
+ 5 http://www.vondel.humanities.uva.nl/ecartico/persons/in… ecar… Mach… http://…
+ 6 http://www.vondel.humanities.uva.nl/ecartico/persons/in… ecar… Claa… http://…
+ 7 http://www.vondel.humanities.uva.nl/ecartico/persons/in… ecar… Claa… http://…
+ 8 http://www.vondel.humanities.uva.nl/ecartico/persons/in… ecar… Will… http://…
+ 9 http://www.vondel.humanities.uva.nl/ecartico/persons/in… ecar… Joha… http://…
+10 http://www.vondel.humanities.uva.nl/ecartico/persons/in… ecar… Hans… http://…
+# ℹ 140 more rows</code></pre>
+</div>
+</div>
+<p>Now, my <code>results_by_page</code> tibble consists of three column variables</p>
+<ul>
+<li><code>summary_url</code>: the link to the Summary Results page which contains the name of each targets-person</li>
+<li><code>url</code>: the relative URL for each target-person</li>
+<li><code>name</code>: the name of each target-person</li>
+</ul>
+<p>Now I can iterate over each row of my <code>results_by_page$url</code> vector to read_html for each target. Then I can parse the raw HTML for each target name page. When I follow the links for each name, I have the raw HTML of each person, in <em>lists</em>, ready to be parsed with the <code>html_nodes</code>, <code>html_text</code>, and <code>html_attr</code> functions.</p>
+</section>
+</section>
+</section>
+<section id="web-scraping" class="level2">
+<h2 class="anchored" data-anchor-id="web-scraping">Web scraping</h2>
+<p>Now you know how to <em>crawl</em> a website to get a URL for each name found at the source web site. (i.e.&nbsp;crawl the site’s navigation.) The next goal is to <code>read_html()</code> to ingest and parse the HTML for each target.</p>
+<blockquote class="blockquote">
+<p>Web scraping = crawling + parsing</p>
+</blockquote>
+<p>Below is an example of gathering and parsing information for one URL representing one person.</p>
+<section id="goal" class="level3">
+<h3 class="anchored" data-anchor-id="goal">Goal</h3>
+<p>Ingest, i.e.&nbsp;<code>read_html()</code>, each target name, then parse the results of each to mine each target for specific information. In this case, I want the names of each person’s children.</p>
+<section id="code-4" class="level4">
+<h4 class="anchored" data-anchor-id="code-4">CODE</h4>
+<p>The information gathered is information from the detailed names page about the children of one person in the target database.</p>
+<p><a href="http://www.vondel.humanities.uva.nl/ecartico/persons/10579">Emanuel Adriaenssen</a> has three children:</p>
+<ul>
+<li><p>Children</p>
+<ul>
+<li>Alexander Adriaenssen, alias: Sander (1587 - 1661)</li>
+<li>Vincent Adriaenssen I, alias: Manciola / Leckerbeetien (1595 - 1675)</li>
+<li>Niclaes Adriaenssen, alias: Nicolaes Adriaenssen (1598 - ca. 1649)</li>
+</ul></li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="co"># http://www.vondel.humanities.uva.nl/ecartico/persons/10579</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="co"># schema:children</span></span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>emanuel <span class="ot">&lt;-</span>  <span class="fu">read_html</span>(<span class="st">"http://www.vondel.humanities.uva.nl/ecartico/persons/10579"</span>)</span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>children_name <span class="ot">&lt;-</span> emanuel <span class="sc">%&gt;%</span> </span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">html_nodes</span>(<span class="st">"ul~ h2+ ul li &gt; a"</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">html_text</span>()</span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a>children_name</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "Alexander   Adriaenssen (1587 - 1661)"  
+[2] "Vincent   Adriaenssen I (1595 - 1675)"  
+[3] "Niclaes   Adriaenssen (1598 - ca. 1649)"</code></pre>
+</div>
+</div>
+</section>
+<section id="iterate-1" class="level4">
+<h4 class="anchored" data-anchor-id="iterate-1">Iterate</h4>
+<p>There now. I just scraped and parsed data for one target, one person in my list of target URLs. Now use purrr to iterate over each target URL in the list. <strong>Do not forget to pause, <code>Sys.sleep(2)</code>,</strong> between each iteration of the <code>read_html()</code> function.</p>
+</section>
+</section>
+</section>
+<section id="refined-code" class="level2">
+<h2 class="anchored" data-anchor-id="refined-code">Refined Code</h2>
+<p>O.K. so I didn’t really explain iteration with the {purrr} package and the <code>map()</code> family of functions. If you want to learn more about that, check out this <a href="https://github.com/libjohn/workshop_rfun_iterate">workshop on iteration</a>. In the meantime, it might be important to point out that the <code>html_nodes()</code> function has been renamed as of {rvest} 1.0.0. <code>html_nodes()</code> is now <code>html_elements()</code>. Anyway, if you want to see how this scraping operation can be done with less code, at least starting with the last manipulation of the <code>nav_df</code> tibble, here’s some updated and refined code….</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>get_name_html <span class="ot">&lt;-</span> <span class="cf">function</span>(url) {</span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">Sys.sleep</span>(<span class="dv">2</span>)</span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>  url <span class="sc">|&gt;</span> </span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">read_html</span>()</span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a>name_urls_df <span class="ot">&lt;-</span> nav_df <span class="sc">|&gt;</span></span>
+<span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">slice</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">3</span>) <span class="sc">|&gt;</span> </span>
+<span id="cb39-9"><a href="#cb39-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">html_results =</span> <span class="fu">map</span>(url, get_name_html)) <span class="sc">|&gt;</span> </span>
+<span id="cb39-10"><a href="#cb39-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">name_url =</span> <span class="fu">map</span>(html_results, <span class="sc">~</span> .x <span class="sc">|&gt;</span> <span class="fu">html_elements</span>(<span class="st">"#setwidth li a"</span>) <span class="sc">|&gt;</span> <span class="fu">html_attr</span>(<span class="st">"href"</span>))) <span class="sc">|&gt;</span> </span>
+<span id="cb39-11"><a href="#cb39-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">name =</span> <span class="fu">map</span>(html_results, <span class="sc">~</span> .x <span class="sc">|&gt;</span> <span class="fu">html_elements</span>(<span class="st">"#setwidth li a"</span>) <span class="sc">|&gt;</span> <span class="fu">html_text</span>())) <span class="sc">|&gt;</span> </span>
+<span id="cb39-12"><a href="#cb39-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unnest</span>(<span class="at">cols =</span> <span class="fu">c</span>(name_url, name)) <span class="sc">|&gt;</span> </span>
+<span id="cb39-13"><a href="#cb39-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">name_url =</span> <span class="fu">str_replace</span>(name_url, <span class="st">"</span><span class="sc">\\</span><span class="st">.</span><span class="sc">\\</span><span class="st">."</span>, <span class="st">"ecartico"</span>)) <span class="sc">|&gt;</span> </span>
+<span id="cb39-14"><a href="#cb39-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">name_full_url =</span> <span class="fu">str_glue</span>(<span class="st">"http://www.vondel.humanities.uva.nl/{name_url}"</span>))</span>
+<span id="cb39-15"><a href="#cb39-15" aria-hidden="true" tabindex="-1"></a>name_urls_df</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 150 × 5
+   url                                 html_results name_url name  name_full_url
+   &lt;glue&gt;                              &lt;list&gt;       &lt;chr&gt;    &lt;chr&gt; &lt;glue&gt;       
+ 1 http://www.vondel.humanities.uva.n… &lt;xml_dcmn&gt;   ecartic… Hill… http://www.v…
+ 2 http://www.vondel.humanities.uva.n… &lt;xml_dcmn&gt;   ecartic… Boud… http://www.v…
+ 3 http://www.vondel.humanities.uva.n… &lt;xml_dcmn&gt;   ecartic… Piet… http://www.v…
+ 4 http://www.vondel.humanities.uva.n… &lt;xml_dcmn&gt;   ecartic… Boud… http://www.v…
+ 5 http://www.vondel.humanities.uva.n… &lt;xml_dcmn&gt;   ecartic… Mach… http://www.v…
+ 6 http://www.vondel.humanities.uva.n… &lt;xml_dcmn&gt;   ecartic… Claa… http://www.v…
+ 7 http://www.vondel.humanities.uva.n… &lt;xml_dcmn&gt;   ecartic… Claa… http://www.v…
+ 8 http://www.vondel.humanities.uva.n… &lt;xml_dcmn&gt;   ecartic… Will… http://www.v…
+ 9 http://www.vondel.humanities.uva.n… &lt;xml_dcmn&gt;   ecartic… Joha… http://www.v…
+10 http://www.vondel.humanities.uva.n… &lt;xml_dcmn&gt;   ecartic… Hans… http://www.v…
+# ℹ 140 more rows</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>name_urls_df <span class="sc">|&gt;</span> </span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="fu">str_detect</span>(name, <span class="fu">regex</span>(<span class="st">"Boudewijn "</span>, <span class="at">ignore_case =</span> <span class="cn">TRUE</span>))) <span class="sc">|&gt;</span> </span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">children_names_html =</span> <span class="fu">map</span>(name_full_url, get_name_html)) <span class="sc">|&gt;</span> </span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">children_names =</span> <span class="fu">map</span>(children_names_html, <span class="sc">~</span> .x <span class="sc">|&gt;</span> <span class="fu">html_elements</span>(<span class="st">"ul~ h2+ ul li &gt; a"</span>) <span class="sc">|&gt;</span> <span class="fu">html_text</span>())) <span class="sc">|&gt;</span> </span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">unnest</span>(children_names)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 3 × 7
+  url              html_results name_url name  name_full_url children_names_html
+  &lt;glue&gt;           &lt;list&gt;       &lt;chr&gt;    &lt;chr&gt; &lt;glue&gt;        &lt;list&gt;             
+1 http://www.vond… &lt;xml_dcmn&gt;   ecartic… Boud… http://www.v… &lt;xml_dcmn&gt;         
+2 http://www.vond… &lt;xml_dcmn&gt;   ecartic… Boud… http://www.v… &lt;xml_dcmn&gt;         
+3 http://www.vond… &lt;xml_dcmn&gt;   ecartic… Boud… http://www.v… &lt;xml_dcmn&gt;         
+# ℹ 1 more variable: children_names &lt;chr&gt;</code></pre>
+</div>
+</div>
+</section>
+<section id="resources" class="level2">
+<h2 class="anchored" data-anchor-id="resources">Resources</h2>
+<ul>
+<li>https://rvest.tidyverse.org</li>
+<li>https://purrr.tidyverse.org</li>
+<li>https://community.rstudio.com/t/loop-for-with-rvest-for-scraping/56133/4 (looping with RVEST)</li>
+<li>purrr / map :: https://jennybc.github.io/purrr-tutorial/ls01_map-name-position-shortcuts.html</li>
+</ul>
+<hr>
+<center>
+<p><strong>John Little</strong></p>
+<p><strong>Data Science Librarian</strong><br>
+Center for Data &amp; Visualization Sciences<br>
+Duke University Libraries</p>
+<p>https://JohnLittle.info<br>
+https://Rfun.library.duke.edu<br>
+https://library.duke.edu/data</p>
+<p>Creative Commons: Attribution-NonCommercial 4.0<br>
+https://creativecommons.org/licenses/by-nc/4.0</p>
+</center>
+<p>&nbsp;</p>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      return note.innerHTML;
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
