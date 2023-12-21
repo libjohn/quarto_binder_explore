@@ -2,7 +2,7 @@
 
 <!-- badges: start -->
 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/libjohn/quarto_binder_explore/HEAD)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/libjohn/quarto_binder_explore/HEAD?urlpath=rstudio)
 
 <!-- badges: end -->
 
